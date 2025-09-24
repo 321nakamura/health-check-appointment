@@ -28,32 +28,38 @@
 
     <section class="card">
       <h2>3. お客様情報</h2>
-      <form id="bookingForm">
+      <form id="bookingForm" novalidate>
         <div class="grid">
+          <div>
+            <label for="employeeId">社員番号 <span class="req">必須</span></label>
+            <input id="employeeId" name="employeeId" required inputmode="numeric" pattern="\d+" placeholder="例）12345">
+            <p class="small muted">※ 数字のみ</p>
+          </div>
+          <div>
+            <label for="department">部署 <span class="req">必須</span></label>
+            <select id="department" name="department" required>
+              <option value="" selected disabled>選択してください</option>
+              <option value="P01">生産本部</option>
+              <option value="P02">生産管理部</option>
+              <option value="P03">出力業務部</option>
+              <option value="P04">印刷生産課</option>
+              <option value="P05">加工生産課</option>
+              <option value="P06">制作部</option>
+              <option value="P07">用紙管理課</option>
+              <option value="P08">管理本部</option>
+              <option value="P09">営業本部</option>
+            </select>
+            <p class="small muted">※ CSVには部署コード（例：P01）と部署名の両方を保存します。</p>
+          </div>
           <div>
             <label for="name">お名前 <span class="req">必須</span></label>
             <input id="name" name="name" required placeholder="例）西川 太郎">
-          </div>
-          <div>
-            <label for="phone">電話番号 <span class="req">必須</span></label>
-            <input id="phone" name="phone" required inputmode="tel" placeholder="例）09012345678">
-          </div>
-          <div>
-            <label for="email">メールアドレス <span class="req">必須</span></label>
-            <input id="email" name="email" type="email" required placeholder="例）taro@example.com">
           </div>
         </div>
 
         <div class="row">
           <label for="note">備考</label>
           <textarea id="note" name="note" rows="3" placeholder="ご要望などがあればご記入ください。"></textarea>
-        </div>
-
-        <div class="row">
-          <label class="checkbox">
-            <input type="checkbox" id="consent" required>
-            個人情報の取扱いに同意します。
-          </label>
         </div>
 
         <div class="actions">
