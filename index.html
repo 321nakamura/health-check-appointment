@@ -27,6 +27,7 @@
     <section class="card">
       <h2>2. 時間枠を選択</h2>
       <div id="slotList" class="slot-list" aria-live="polite"></div>
+      <p id="slotError" class="msg error" style="display:none;margin-top:8px;"></p>
     </section>
 
     <section class="card">
@@ -35,7 +36,7 @@
         <div class="grid">
           <div>
             <label for="employeeId">社員番号 <span class="req">必須</span></label>
-            <input id="employeeId" name="employeeId" required placeholder="例）321 / A-321 など自由入力可">
+            <input id="employeeId" name="employeeId" required placeholder="例）123 / 250901">
           </div>
           <div>
             <label for="department">部署 <span class="req">必須</span></label>

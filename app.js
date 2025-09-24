@@ -1,18 +1,18 @@
-/* Reservation Form Logic — v2.1d: fixed date 2025-10-24, dept dropdown, CSV, duplicate prevention */
+/* Reservation Form Logic — v2.1e: fixed date, improved slot load diagnostics */
 const qs = (s, el=document) => el.querySelector(s);
 const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-const STATE_KEY = "booking_state_v2_1d";
+const STATE_KEY = "booking_state_v2_1e";
 const ADMIN_PARAM = new URL(location.href).searchParams.get("admin") === "1";
 
-let state = { data: {}, version: 213 };
+let state = { data: {}, version: 214 };
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 213) state = parsed;
+    if (parsed && parsed.version === 214) state = parsed;
   } catch(e) { console.warn(e); }
 }
 function saveState() {
@@ -20,20 +20,54 @@ function saveState() {
 }
 
 async function loadSlots() {
-  const res = await fetch("slots.json", {cache: "no-cache"});
-  if (!res.ok) {
-    console.error("failed to load slots.json", res.status);
+  let res;
+  try {
+    res = await fetch("slots.json", {cache: "no-cache"});
+  } catch(err) {
+    console.error("fetch slots.json failed:", err);
+    showSlotError("時間枠データ(slots.json)の取得に失敗しました。ファイルの置き場所と名前をご確認ください。");
     return;
   }
-  const arr = await res.json();
-  arr.forEach(entry => {
-    if (entry.date !== "2025-10-24") return; // 固定日以外は無視
+  if (!res.ok) {
+    console.error("failed to load slots.json", res.status);
+    showSlotError(`時間枠データ(slots.json)を読み込めませんでした（HTTP ${res.status}）。`);
+    return;
+  }
+  let arr;
+  try {
+    arr = await res.json();
+  } catch(err) {
+    console.error("parse slots.json failed:", err);
+    showSlotError("時間枠データ(slots.json)の形式に誤りがあります（JSONパースエラー）。");
+    return;
+  }
+  const filtered = arr.filter(entry => entry.date === "2025-10-24");
+  if (!filtered.length) {
+    console.warn("no entries for 2025-10-24 in slots.json");
+    showSlotError("指定日(2025-10-24)の時間枠が見つかりません。slots.json をご確認ください。");
+    return;
+  }
+  filtered.forEach(entry => {
     const date = entry.date;
     const slots = entry.slots.map(s => ({ start: s.start, end: s.end, capacity: Number(s.capacity||0) }));
     if (!state.data[date]) state.data[date] = { slots, bookings: [] };
     else { state.data[date].slots = slots; state.data[date].bookings = state.data[date].bookings || []; }
   });
+  hideSlotError();
   saveState();
+}
+
+function showSlotError(msg) {
+  const el = qs("#slotError");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+}
+function hideSlotError() {
+  const el = qs("#slotError");
+  if (!el) return;
+  el.textContent = "";
+  el.style.display = "none";
 }
 
 function getRemain(date, slot) {
@@ -44,8 +78,7 @@ function getRemain(date, slot) {
 }
 
 function renderDates() {
-  // 日付は固定なので select には既に index.html で入っている
-  renderSlots();
+  renderSlots(); // fixed date
 }
 
 let selectedSlot = null;
@@ -126,41 +159,13 @@ function cancelSelection() {
   updateSubmitEnabled(); showMsg("");
 }
 
-// Admin
-function isAdmin() { return ADMIN_PARAM; }
-function setupAdmin() {
-  const panel = qs("#adminPanel");
-  if (!isAdmin()) { panel.hidden = true; return; }
-  panel.hidden = false;
-  qs("#exportCsvBtn").addEventListener("click", exportCsv);
-  qs("#resetDataBtn").addEventListener("click", resetAll);
-}
-function exportCsv() {
-  const rows = [["date","start","end","employee_id","department","name","note","timestamp"]];
-  Object.entries(state.data).forEach(([date, rec]) => {
-    rec.bookings.forEach(b => rows.push([
-      b.date,b.start,b.end,b.employeeId,b.department,b.name,(b.note||" ").replace(/\n/g," "),b.ts
-    ]));
-  });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], {type: "text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = `bookings_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-function resetAll() {
-  if (!confirm("全予約データを削除します。よろしいですか？")) return;
-  Object.keys(state.data).forEach(d => state.data[d].bookings = []);
-  saveState(); renderSlots(); showMsg("全予約データを初期化しました。");
-}
-
 function init() {
   loadState();
-  loadSlots().then(() => { renderDates(); setupAdmin(); });
+  loadSlots().then(() => { renderDates(); });
   qs("#bookingForm").addEventListener("submit", submitBooking);
   ["employeeId","department","name","note"].forEach(id => {
     const el = qs("#"+id); if (el) { el.addEventListener("input", onFormChange); el.addEventListener("change", onFormChange); }
   });
-  qs("#cancelBtn").addEventListener("click", cancelSelection);
+  const cancelBtn = qs("#cancelBtn"); if (cancelBtn) cancelBtn.addEventListener("click", cancelSelection);
 }
 document.addEventListener("DOMContentLoaded", init);
