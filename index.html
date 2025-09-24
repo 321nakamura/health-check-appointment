@@ -32,8 +32,8 @@
         <div class="grid">
           <div>
             <label for="employeeId">社員番号 <span class="req">必須</span></label>
-            <input id="employeeId" name="employeeId" required inputmode="numeric" pattern="\d+" placeholder="例）12345">
-            <p class="small muted">※ 数字のみ（全角や空白は自動で半角数字に整形します）</p>
+            <input id="employeeId" name="employeeId" required placeholder="例）321 / A-321 など自由入力可">
+            <p class="small muted">※ 形式の制限なし（必須のみ）</p>
           </div>
           <div>
             <label for="department">部署 <span class="req">必須</span></label>
@@ -49,7 +49,6 @@
               <option value="P08">管理本部</option>
               <option value="P09">営業本部</option>
             </select>
-            <p class="small muted">※ CSVには部署コード（例：P01）と部署名の両方を保存します。</p>
           </div>
           <div>
             <label for="name">お名前 <span class="req">必須</span></label>

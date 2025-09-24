@@ -1,27 +1,18 @@
-/* Reservation Form Logic — v4.1 patch: normalize digits & trim spaces */
+/* Reservation Form Logic — v4.2: employeeId accepts any string (required only) */
 const qs = (s, el=document) => el.querySelector(s);
 const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-const STATE_KEY = "booking_state_v4_1";
+const STATE_KEY = "booking_state_v4_2";
 const ADMIN_PARAM = new URL(location.href).searchParams.get("admin") === "1";
 
-let state = { data: {}, version: 41 };
-
-// 全角数字→半角数字、全角スペース→半角、空白除去のユーティリティ
-function normalizeDigits(str) {
-  if (!str) return "";
-  // 全角→半角
-  const z2h = str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
-  // 全角スペース→半角、前後空白削除
-  return z2h.replace(/\u3000/g, " ").trim();
-}
+let state = { data: {}, version: 42 };
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 41) state = parsed;
+    if (parsed && parsed.version === 42) state = parsed;
   } catch(e) { console.warn(e); }
 }
 function saveState() {
@@ -76,18 +67,13 @@ function renderSlots() {
   });
 }
 
-function currentEmployeeId() {
-  const raw = qs("#employeeId")?.value || "";
-  return normalizeDigits(raw).replace(/\s+/g, ""); // 空白除去
-}
+function val(id) { return (qs(id)?.value || "").trim(); }
 
 function updateSubmitEnabled() {
-  const id = currentEmployeeId();
-  const dep = (qs("#department")?.value || "").trim();
-  const name = (qs("#name")?.value || "").trim();
-  const idDigitsOnly = /^\d+$/.test(id);
-  const depSelected = !!dep && dep !== "";
-  const ok = !!(selectedSlot && idDigitsOnly && depSelected && name);
+  const employeeId = val("#employeeId");
+  const dep = val("#department");
+  const name = val("#name");
+  const ok = !!(selectedSlot && employeeId && dep && name);
   qs("#submitBtn").disabled = !ok;
 }
 
@@ -96,18 +82,10 @@ function showMsg(text, kind="success") {
   el.className = "msg " + (kind==="error" ? "error" : "success");
 }
 
-function onFormChange(e) {
-  // 入力中も社員番号を正規化して見た目に反映
-  if (e && e.target && e.target.id === "employeeId") {
-    const caret = e.target.selectionStart;
-    e.target.value = currentEmployeeId();
-    // キャレット位置は単純化のため末尾へ
-    e.target.selectionStart = e.target.selectionEnd = e.target.value.length;
-  }
-  updateSubmitEnabled();
-}
+function onFormChange() { updateSubmitEnabled(); }
 
 function alreadyBooked(rec, slot, employeeId) {
+  // 文字列としての完全一致で重複判定
   return rec.bookings.some(b => b.start===slot.start && b.end===slot.end && b.employeeId===employeeId);
 }
 
@@ -116,18 +94,20 @@ function submitBooking(e) {
   if (!selectedSlot) { showMsg("時間枠を選択してください。", "error"); return; }
   const rec = state.data[selectedSlot.date]; if (!rec) return;
 
-  const employeeId = currentEmployeeId();
-  if (!/^\d+$/.test(employeeId)) { showMsg("社員番号は数字のみで入力してください。", "error"); return; }
+  const employeeId = val("#employeeId");
+  const departmentSelect = qs("#department");
+  const departmentCode = departmentSelect.value;
+  const departmentName = departmentSelect.options[departmentSelect.selectedIndex]?.text || "";
+  const name = val("#name");
+  const note = val("#note");
+
+  if (!employeeId) { showMsg("社員番号は必須です。", "error"); return; }
+  if (!departmentCode) { showMsg("部署を選択してください。", "error"); return; }
+  if (!name) { showMsg("お名前は必須です。", "error"); return; }
 
   if (getRemain(selectedSlot.date, selectedSlot) <= 0) {
     showMsg("選択した時間枠は満席です。別の枠をお選びください。", "error"); renderSlots(); return;
   }
-
-  const depSelect = qs("#department");
-  const departmentCode = depSelect.value;
-  const departmentName = depSelect.options[depSelect.selectedIndex]?.text || "";
-  const name = qs("#name").value.trim();
-  const note = qs("#note").value.trim();
 
   if (alreadyBooked(rec, selectedSlot, employeeId)) {
     showMsg("同一の社員番号で同じ時間枠の予約が既にあります。", "error"); return;
@@ -171,8 +151,7 @@ function exportCsv() {
 }
 function resetAll() {
   if (!confirm("全予約データを削除します。よろしいですか？")) return;
-  Object.keys(state.data).forEach(d => state.data[d].bookings = [];
-  );
+  Object.keys(state.data).forEach(d => state.data[d].bookings = []);
   saveState(); renderSlots(); showMsg("全予約データを初期化しました。");
 }
 
