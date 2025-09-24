@@ -1,18 +1,27 @@
-/* Reservation Form Logic — v4 (department codes + labels) */
+/* Reservation Form Logic — v4.1 patch: normalize digits & trim spaces */
 const qs = (s, el=document) => el.querySelector(s);
 const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-const STATE_KEY = "booking_state_v4";
+const STATE_KEY = "booking_state_v4_1";
 const ADMIN_PARAM = new URL(location.href).searchParams.get("admin") === "1";
 
-let state = { data: {}, version: 4 };
+let state = { data: {}, version: 41 };
+
+// 全角数字→半角数字、全角スペース→半角、空白除去のユーティリティ
+function normalizeDigits(str) {
+  if (!str) return "";
+  // 全角→半角
+  const z2h = str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  // 全角スペース→半角、前後空白削除
+  return z2h.replace(/\u3000/g, " ").trim();
+}
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 4) state = parsed;
+    if (parsed && parsed.version === 41) state = parsed;
   } catch(e) { console.warn(e); }
 }
 function saveState() {
@@ -67,8 +76,13 @@ function renderSlots() {
   });
 }
 
+function currentEmployeeId() {
+  const raw = qs("#employeeId")?.value || "";
+  return normalizeDigits(raw).replace(/\s+/g, ""); // 空白除去
+}
+
 function updateSubmitEnabled() {
-  const id = (qs("#employeeId")?.value || "").trim();
+  const id = currentEmployeeId();
   const dep = (qs("#department")?.value || "").trim();
   const name = (qs("#name")?.value || "").trim();
   const idDigitsOnly = /^\d+$/.test(id);
@@ -82,7 +96,16 @@ function showMsg(text, kind="success") {
   el.className = "msg " + (kind==="error" ? "error" : "success");
 }
 
-function onFormChange() { updateSubmitEnabled(); }
+function onFormChange(e) {
+  // 入力中も社員番号を正規化して見た目に反映
+  if (e && e.target && e.target.id === "employeeId") {
+    const caret = e.target.selectionStart;
+    e.target.value = currentEmployeeId();
+    // キャレット位置は単純化のため末尾へ
+    e.target.selectionStart = e.target.selectionEnd = e.target.value.length;
+  }
+  updateSubmitEnabled();
+}
 
 function alreadyBooked(rec, slot, employeeId) {
   return rec.bookings.some(b => b.start===slot.start && b.end===slot.end && b.employeeId===employeeId);
@@ -93,8 +116,8 @@ function submitBooking(e) {
   if (!selectedSlot) { showMsg("時間枠を選択してください。", "error"); return; }
   const rec = state.data[selectedSlot.date]; if (!rec) return;
 
-  const employeeId = (qs("#employeeId").value || "").trim();
-  if (!/^\\d+$/.test(employeeId)) { showMsg("社員番号は数字のみで入力してください。", "error"); return; }
+  const employeeId = currentEmployeeId();
+  if (!/^\d+$/.test(employeeId)) { showMsg("社員番号は数字のみで入力してください。", "error"); return; }
 
   if (getRemain(selectedSlot.date, selectedSlot) <= 0) {
     showMsg("選択した時間枠は満席です。別の枠をお選びください。", "error"); renderSlots(); return;
@@ -140,7 +163,7 @@ function exportCsv() {
       b.date,b.start,b.end,b.employeeId,b.departmentCode,b.departmentName,b.name,(b.note||" ").replace(/\\n/g," "),b.ts
     ]));
   });
-  const csv = rows.map(r => r.map(v => `\"${String(v).replace(/\"/g,'\"\"')}\"`).join(",")).join("\\n");
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\\n");
   const blob = new Blob([csv], {type: "text/csv"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url; a.download = `bookings_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.csv`;
@@ -148,7 +171,8 @@ function exportCsv() {
 }
 function resetAll() {
   if (!confirm("全予約データを削除します。よろしいですか？")) return;
-  Object.keys(state.data).forEach(d => state.data[d].bookings = []);
+  Object.keys(state.data).forEach(d => state.data[d].bookings = [];
+  );
   saveState(); renderSlots(); showMsg("全予約データを初期化しました。");
 }
 
