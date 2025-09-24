@@ -3,6 +3,16 @@
     "date": "2025-10-24",
     "slots": [
       {
+        "start": "08:30",
+        "end": "08:45",
+        "capacity": 6
+      },
+      {
+        "start": "08:45",
+        "end": "09:00",
+        "capacity": 6
+      },
+      {
         "start": "09:00",
         "end": "09:30",
         "capacity": 6
@@ -25,26 +35,6 @@
       {
         "start": "11:00",
         "end": "11:30",
-        "capacity": 6
-      },
-      {
-        "start": "13:00",
-        "end": "13:30",
-        "capacity": 6
-      },
-      {
-        "start": "13:30",
-        "end": "14:00",
-        "capacity": 6
-      },
-      {
-        "start": "14:00",
-        "end": "14:30",
-        "capacity": 6
-      },
-      {
-        "start": "14:30",
-        "end": "15:00",
         "capacity": 6
       }
     ]
