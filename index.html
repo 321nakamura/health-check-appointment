@@ -28,27 +28,15 @@
 
     <section class="card">
       <h2>3. お客様情報</h2>
-      <form id="bookingForm" novalidate>
+      <form id="bookingForm">
         <div class="grid">
           <div>
             <label for="employeeId">社員番号 <span class="req">必須</span></label>
             <input id="employeeId" name="employeeId" required placeholder="例）321 / A-321 など自由入力可">
-            <p class="small muted">※ 形式の制限なし（必須のみ）</p>
           </div>
           <div>
             <label for="department">部署 <span class="req">必須</span></label>
-            <select id="department" name="department" required>
-              <option value="" selected disabled>選択してください</option>
-              <option value="P01">生産本部</option>
-              <option value="P02">生産管理部</option>
-              <option value="P03">出力業務部</option>
-              <option value="P04">印刷生産課</option>
-              <option value="P05">加工生産課</option>
-              <option value="P06">制作部</option>
-              <option value="P07">用紙管理課</option>
-              <option value="P08">管理本部</option>
-              <option value="P09">営業本部</option>
-            </select>
+            <input id="department" name="department" required placeholder="例）営業部">
           </div>
           <div>
             <label for="name">お名前 <span class="req">必須</span></label>
