@@ -78,6 +78,16 @@
         恐れ入りますが、<strong>管理本部 総務</strong>までご連絡をお願いします。
       </p>
     </section>
+
+    <!-- 管理パネル（?admin=1 で表示） -->
+    <section class="card admin-only" id="adminPanel" hidden>
+      <h2>管理パネル</h2>
+      <div class="grid">
+        <div><button id="exportCsvBtn">CSVエクスポート</button></div>
+        <div><button id="resetDataBtn" class="danger">全データ初期化</button></div>
+      </div>
+      <p class="muted small">※ 管理モードは URL に <code>?admin=1</code> を付けてアクセスしてください。</p>
+    </section>
   </main>
 
   <footer class="container center muted small">

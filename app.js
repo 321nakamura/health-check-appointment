@@ -1,18 +1,18 @@
-/* Reservation Form Logic — v2.1e: fixed date, improved slot load diagnostics */
+/* Reservation Form Logic — v2.1f: fixed date, diagnostics, admin panel restored */
 const qs = (s, el=document) => el.querySelector(s);
 const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-const STATE_KEY = "booking_state_v2_1e";
+const STATE_KEY = "booking_state_v2_1f";
 const ADMIN_PARAM = new URL(location.href).searchParams.get("admin") === "1";
 
-let state = { data: {}, version: 214 };
+let state = { data: {}, version: 215 };
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 214) state = parsed;
+    if (parsed && parsed.version === 215) state = parsed;
   } catch(e) { console.warn(e); }
 }
 function saveState() {
@@ -21,32 +21,14 @@ function saveState() {
 
 async function loadSlots() {
   let res;
-  try {
-    res = await fetch("slots.json", {cache: "no-cache"});
-  } catch(err) {
-    console.error("fetch slots.json failed:", err);
-    showSlotError("時間枠データ(slots.json)の取得に失敗しました。ファイルの置き場所と名前をご確認ください。");
-    return;
-  }
-  if (!res.ok) {
-    console.error("failed to load slots.json", res.status);
-    showSlotError(`時間枠データ(slots.json)を読み込めませんでした（HTTP ${res.status}）。`);
-    return;
-  }
+  try { res = await fetch("slots.json", {cache: "no-cache"}); }
+  catch(err) { console.error("fetch slots.json failed:", err); showSlotError("時間枠データ(slots.json)の取得に失敗しました。"); return; }
+  if (!res.ok) { console.error("failed to load slots.json", res.status); showSlotError(`時間枠データ(slots.json)を読み込めませんでした（HTTP ${res.status}）。`); return; }
   let arr;
-  try {
-    arr = await res.json();
-  } catch(err) {
-    console.error("parse slots.json failed:", err);
-    showSlotError("時間枠データ(slots.json)の形式に誤りがあります（JSONパースエラー）。");
-    return;
-  }
+  try { arr = await res.json(); }
+  catch(err) { console.error("parse slots.json failed:", err); showSlotError("時間枠データ(slots.json)の形式に誤りがあります。"); return; }
   const filtered = arr.filter(entry => entry.date === "2025-10-24");
-  if (!filtered.length) {
-    console.warn("no entries for 2025-10-24 in slots.json");
-    showSlotError("指定日(2025-10-24)の時間枠が見つかりません。slots.json をご確認ください。");
-    return;
-  }
+  if (!filtered.length) { console.warn("no entries for 2025-10-24"); showSlotError("指定日(2025-10-24)の時間枠が見つかりません。"); return; }
   filtered.forEach(entry => {
     const date = entry.date;
     const slots = entry.slots.map(s => ({ start: s.start, end: s.end, capacity: Number(s.capacity||0) }));
@@ -57,18 +39,8 @@ async function loadSlots() {
   saveState();
 }
 
-function showSlotError(msg) {
-  const el = qs("#slotError");
-  if (!el) return;
-  el.textContent = msg;
-  el.style.display = "block";
-}
-function hideSlotError() {
-  const el = qs("#slotError");
-  if (!el) return;
-  el.textContent = "";
-  el.style.display = "none";
-}
+function showSlotError(msg) { const el = qs("#slotError"); if (!el) return; el.textContent = msg; el.style.display="block"; }
+function hideSlotError() { const el = qs("#slotError"); if (!el) return; el.textContent = ""; el.style.display="none"; }
 
 function getRemain(date, slot) {
   const rec = state.data[date]; if (!rec) return 0;
@@ -77,9 +49,7 @@ function getRemain(date, slot) {
   return Math.max(0, cap - used);
 }
 
-function renderDates() {
-  renderSlots(); // fixed date
-}
+function renderDates() { renderSlots(); }
 
 let selectedSlot = null;
 function renderSlots() {
@@ -112,56 +82,65 @@ function updateSubmitEnabled() {
   qs("#submitBtn").disabled = !ok;
 }
 
-function showMsg(text, kind="success") {
-  const el = qs("#formMsg"); el.textContent = text;
-  el.className = "msg " + (kind==="error" ? "error" : "success");
-}
-
+function showMsg(text, kind="success") { const el = qs("#formMsg"); el.textContent = text; el.className = "msg " + (kind==="error" ? "error" : "success"); }
 function onFormChange() { updateSubmitEnabled(); }
-
-function alreadyBooked(rec, slot, employeeId) {
-  return rec.bookings.some(b => b.start===slot.start && b.end===slot.end && b.employeeId===employeeId);
-}
+function alreadyBooked(rec, slot, employeeId) { return rec.bookings.some(b => b.start===slot.start && b.end===slot.end && b.employeeId===employeeId); }
 
 function submitBooking(e) {
   e.preventDefault();
   if (!selectedSlot) { showMsg("時間枠を選択してください。", "error"); return; }
   const rec = state.data[selectedSlot.date]; if (!rec) return;
-
   const employeeId = val("#employeeId");
   const department = val("#department");
   const name = val("#name");
   const note = val("#note");
-
   if (!employeeId) { showMsg("社員番号は必須です。", "error"); return; }
   if (!department) { showMsg("部署を選択してください。", "error"); return; }
   if (!name) { showMsg("お名前は必須です。", "error"); return; }
-
-  if (getRemain(selectedSlot.date, selectedSlot) <= 0) {
-    showMsg("選択した時間枠は満席です。別の枠をお選びください。", "error"); renderSlots(); return;
-  }
-
-  if (alreadyBooked(rec, selectedSlot, employeeId)) {
-    showMsg("同一の社員番号で同じ時間枠の予約が既にあります。", "error"); return;
-  }
-
-  rec.bookings.push({
-    date: selectedSlot.date, start: selectedSlot.start, end: selectedSlot.end,
-    employeeId, department, name, note, ts: new Date().toISOString()
-  });
-  saveState(); renderSlots();
-  showMsg("予約を受け付けました。ありがとうございます。");
+  if (getRemain(selectedSlot.date, selectedSlot) <= 0) { showMsg("選択した時間枠は満席です。別の枠をお選びください。", "error"); renderSlots(); return; }
+  if (alreadyBooked(rec, selectedSlot, employeeId)) { showMsg("同一の社員番号で同じ時間枠の予約が既にあります。", "error"); return; }
+  rec.bookings.push({ date: selectedSlot.date, start: selectedSlot.start, end: selectedSlot.end, employeeId, department, name, note, ts: new Date().toISOString() });
+  saveState(); renderSlots(); showMsg("予約を受け付けました。ありがとうございます。");
   qs("#bookingForm").reset(); selectedSlot = null; updateSubmitEnabled();
 }
 
-function cancelSelection() {
-  selectedSlot = null; qsa('input[name="slot"]').forEach(r => r.checked = false);
-  updateSubmitEnabled(); showMsg("");
+function cancelSelection() { selectedSlot = null; qsa('input[name="slot"]').forEach(r => r.checked=false); updateSubmitEnabled(); showMsg(""); }
+
+// Admin
+function isAdmin() { return ADMIN_PARAM; }
+function setupAdmin() {
+  const panel = qs("#adminPanel");
+  if (!panel) return;
+  if (isAdmin()) {
+    panel.hidden = false;
+    const exportBtn = qs("#exportCsvBtn");
+    const resetBtn = qs("#resetDataBtn");
+    if (exportBtn) exportBtn.addEventListener("click", exportCsv);
+    if (resetBtn) resetBtn.addEventListener("click", resetAll);
+  } else {
+    panel.hidden = true;
+  }
+}
+function exportCsv() {
+  const rows = [["date","start","end","employee_id","department","name","note","timestamp"]];
+  Object.entries(state.data).forEach(([date, rec]) => {
+    rec.bookings.forEach(b => rows.push([ b.date,b.start,b.end,b.employeeId,b.department,b.name,(b.note||" ").replace(/\n/g," "),b.ts ]));
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type: "text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = `bookings_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+function resetAll() {
+  if (!confirm("全予約データを削除します。よろしいですか？")) return;
+  Object.keys(state.data).forEach(d => state.data[d].bookings = []);
+  saveState(); renderSlots(); showMsg("全予約データを初期化しました。");
 }
 
 function init() {
   loadState();
-  loadSlots().then(() => { renderDates(); });
+  loadSlots().then(() => { renderDates(); setupAdmin(); });
   qs("#bookingForm").addEventListener("submit", submitBooking);
   ["employeeId","department","name","note"].forEach(id => {
     const el = qs("#"+id); if (el) { el.addEventListener("input", onFormChange); el.addEventListener("change", onFormChange); }
