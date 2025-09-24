@@ -1,0 +1,110 @@
+/* Minimal, clean styles */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --primary: #2563eb;
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --warn: #d97706;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans JP, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+h1 { font-size: 1.75rem; margin: 0 0 8px; }
+h2 { font-size: 1.25rem; margin: 0 0 12px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+}
+
+.row { display: grid; gap: 8px; margin-bottom: 12px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+label { font-weight: 600; }
+input, select, textarea, button {
+  font: inherit;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+textarea { resize: vertical; }
+
+.req { color: var(--danger); font-weight: 700; }
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+.center { text-align: center; }
+
+.actions { display: flex; gap: 8px; }
+
+button {
+  padding: 10px 14px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button.ghost {
+  background: transparent;
+  color: var(--primary);
+}
+button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slot-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.slot {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.slot .times { font-weight: 700; }
+.slot .cap { font-size: 0.9rem; color: var(--muted); }
+.slot .remain.ok { color: var(--ok); }
+.slot .remain.low { color: var(--warn); }
+.slot .remain.zero { color: var(--danger); }
+.slot input[type="radio"] { margin-right: 6px; }
+
+.msg { margin-top: 8px; }
+.success { color: var(--ok); }
+.error { color: var(--danger); }
+
+.admin-only { border-style: dashed; }

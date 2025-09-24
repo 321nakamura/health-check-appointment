@@ -1,0 +1,92 @@
+[
+  {
+    "date": "2025/10/24",
+    "slots": [
+      {
+        "start": "08:30",
+        "end": "08:45",
+        "capacity": 3
+      },
+      {
+        "start": "08:45",
+        "end": "09:00",
+        "capacity": 6
+      },
+      {
+        "start": "09:00",
+        "end": "09:15",
+        "capacity": 6
+      },
+      {
+        "start": "09:15",
+        "end": "09:30",
+        "capacity": 6
+      },
+      {
+        "start": "09:30",
+        "end": "09:45",
+        "capacity": 6
+      },
+      {
+        "start": "09:45",
+        "end": "10:00",
+        "capacity": 6
+      },
+      {
+        "start": "10:00",
+        "end": "10:15",
+        "capacity": 7
+      },
+      {
+        "start": "10:15",
+        "end": "10:30",
+        "capacity": 7
+      },
+      {
+        "start": "10:30",
+        "end": "10:45",
+        "capacity": 7
+      },
+      {
+        "start": "10:45",
+        "end": "11:00",
+        "capacity": 7
+      },
+      {
+        "start": "11:00",
+        "end": "11:15",
+        "capacity": 8
+      },
+      {
+        "start": "11:15",
+        "end": "11:30",
+        "capacity": 7
+      }
+    ]
+  },
+  {
+    "date": "2025/10/25",
+    "slots": [
+      {
+        "start": "09:00",
+        "end": "09:15",
+        "capacity": 5
+      },
+      {
+        "start": "09:15",
+        "end": "09:30",
+        "capacity": 5
+      },
+      {
+        "start": "09:30",
+        "end": "09:45",
+        "capacity": 5
+      },
+      {
+        "start": "09:45",
+        "end": "10:00",
+        "capacity": 5
+      }
+    ]
+  }
+]
