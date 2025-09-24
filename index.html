@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>予約フォーム</title>
+  <title>健康診断 予約フォーム</title>
   <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="社内向け 健康診断の予約フォーム（静的版）">
 </head>
 <body>
   <header class="container">
-    <h1>予約フォーム</h1>
-    <p class="muted">時間枠ごとに定員を設定できます。日付と時間枠を選び、必要事項を入力してください。</p>
+    <h1>健康診断 予約フォーム</h1>
+    <p class="muted">下記の日付・時間枠からご希望の枠を選択し、必要事項をご入力ください。</p>
   </header>
 
   <main class="container">
@@ -17,7 +18,9 @@
       <h2>1. 日付を選択</h2>
       <div class="row">
         <label for="dateSelect">予約日</label>
-        <select id="dateSelect" aria-label="予約日"></select>
+        <select id="dateSelect" aria-label="予約日">
+          <option value="2025-10-24" selected>2025-10-24</option>
+        </select>
       </div>
     </section>
 
@@ -28,7 +31,7 @@
 
     <section class="card">
       <h2>3. お客様情報</h2>
-      <form id="bookingForm">
+      <form id="bookingForm" novalidate>
         <div class="grid">
           <div>
             <label for="employeeId">社員番号 <span class="req">必須</span></label>
@@ -36,7 +39,18 @@
           </div>
           <div>
             <label for="department">部署 <span class="req">必須</span></label>
-            <input id="department" name="department" required placeholder="例）営業部">
+            <select id="department" name="department" required>
+              <option value="" selected disabled>選択してください</option>
+              <option>生産本部</option>
+              <option>生産管理部</option>
+              <option>出力業務部</option>
+              <option>印刷生産課</option>
+              <option>加工生産課</option>
+              <option>制作部</option>
+              <option>用紙管理課</option>
+              <option>管理本部</option>
+              <option>営業本部</option>
+            </select>
           </div>
           <div>
             <label for="name">お名前 <span class="req">必須</span></label>
@@ -54,25 +68,19 @@
           <button type="button" id="cancelBtn" class="ghost">選択をクリア</button>
         </div>
       </form>
-      <p id="formMsg" class="msg" role="status" aria-live="polite"></p>
-    </section>
 
-    <section class="card admin-only" id="adminPanel" hidden>
-      <h2>管理パネル</h2>
-      <div class="grid">
-        <div>
-          <button id="exportCsvBtn">CSVエクスポート</button>
-        </div>
-        <div>
-          <button id="resetDataBtn" class="danger">全データ初期化</button>
-        </div>
-      </div>
-      <p class="muted small">※ 管理モードは URL に <code>?admin=1</code> を付けてアクセスしてください。</p>
+      <p id="formMsg" class="msg" role="status" aria-live="polite"></p>
+
+      <!-- 注意書きコメント -->
+      <p class="muted small" style="margin-top:1em; line-height:1.6;">
+        ※ 一度登録された方で時間の変更がある場合、こちらのフォームでは修正できません。<br>
+        恐れ入りますが、<strong>管理本部 総務</strong>までご連絡をお願いします。
+      </p>
     </section>
   </main>
 
   <footer class="container center muted small">
-    <p>© 2025 予約フォーム（静的版）</p>
+    <p>© 2025 健康診断予約フォーム（静的版）</p>
   </footer>
 
   <script src="app.js"></script>
